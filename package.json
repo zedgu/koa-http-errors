@@ -1,6 +1,6 @@
 {
   "name": "koa-http-errors",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Create HTTP Errors (Custom HTTP Errors) for Koa",
   "main": "index.js",
   "scripts": {
