@@ -1,9 +1,12 @@
-var assert = require('assert');
 var statuses = require('statuses');
-var createError = require('http-errors');
+var createError = require('http-err');
 
 module.exports = function(app, options) {
   options = options || {};
+
+  app.context.throw = function(){
+    throw createError.apply(null, arguments);
+  };
 
   app.use(function* error(next){
     var err = null;
@@ -15,10 +18,10 @@ module.exports = function(app, options) {
     } catch (e) {
       err = e;
     }
+
     if (err === null) {
       return;
     }
-    
     this.app.emit('error', err, this);
     if ('ENOENT' == err.code) err.status = 404;
 
@@ -27,8 +30,9 @@ module.exports = function(app, options) {
       return;
     }
 
-    this.status = 'number' === typeof err.status && statuses[err.status] ? err.status : 500;
     var msg = statuses.empty[this.status] ? null : (err.expose ? err.message : statuses[this.status]);
+    this.res.statusCode = 'number' === typeof err.status ? err.status : 500;
+    this.res.statusMessage = msg;
 
     if ('json' === this.accepts('text', 'json')) {
       this.type = 'json';
