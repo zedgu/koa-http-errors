@@ -7,6 +7,10 @@ module.exports = function(app, options) {
   app.context.throw = function(){
     throw createError.apply(null, arguments);
   };
+  app.context.assert = function(determination, statusCode, statusMessage, options) {
+    if (determination) return;
+    throw createError(statusCode, statusMessage, options);
+  };
 
   app.use(function* error(next){
     var err = null;
