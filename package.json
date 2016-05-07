@@ -1,6 +1,6 @@
 {
   "name": "koa-http-errors",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Error formatter for Koa",
   "main": "index.js",
   "scripts": {
