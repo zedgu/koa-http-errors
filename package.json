@@ -28,6 +28,7 @@
     "co-render": "1"
   },
   "devDependencies": {
+    "koa": "*",
     "ejs": "*",
     "istanbul-harmony": "*",
     "mocha": "*",
