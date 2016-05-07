@@ -1,10 +1,12 @@
 {
   "name": "koa-http-errors",
   "version": "0.2.0",
-  "description": "Create HTTP Errors (Custom HTTP Errors) for Koa",
+  "description": "Error formatter for Koa",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "test": "NODE_ENV=test ./node_modules/.bin/mocha --reporter spec --require should test/*.js --bail",
+    "test-cov": "NODE_ENV=test node node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- -u exports --require should test/*.js --bail",
+    "test-travis": "NODE_ENV=test node node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha --report lcovonly -- -u exports --require should test/*.js --bail"
   },
   "repository": {
     "type": "git",
@@ -14,9 +16,7 @@
     "koa",
     "http",
     "status",
-    "error",
-    "middleware",
-    "custom"
+    "error"
   ],
   "author": "Zed Gu",
   "license": "MIT",
@@ -25,7 +25,13 @@
   },
   "homepage": "https://github.com/zedgu/koa-http-errors",
   "dependencies": {
-    "http-err": "^0.1.0",
-    "statuses": "^1.2.0"
+    "co-render": "1"
+  },
+  "devDependencies": {
+    "ejs": "*",
+    "istanbul-harmony": "*",
+    "mocha": "*",
+    "should": "*",
+    "supertest": "*"
   }
 }

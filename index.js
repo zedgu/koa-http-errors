@@ -1,51 +1,79 @@
-var statuses = require('statuses');
-var createError = require('http-err');
+const coRender = require('co-render');
+const http = require('http');
 
-module.exports = function(app, options) {
+function *jsonRender(content) {
+  return {
+    code: content.err.code,
+    error: content.msg,
+    status: content.ctx.status,
+    request: content.ctx.path
+  };
+}
+
+function *htmlRender(content) {
+  return yield coRender(content.template, {
+    engine: content.engine,
+    cache: content.cache,
+    env: content.env,
+    ctx: content.ctx,
+    request: content.ctx.request,
+    response: content.ctx.response,
+    error: content.err.message,
+    stack: content.err.stack,
+    status: content.ctx.status,
+    code: content.err.code
+  });
+}
+
+function *textRender(content) {
+  return 'Code: ' + content.code + '\n'
+    + 'Error: ' + content.msg + '\n'
+    + 'Status: ' + content.ctx.status + '\n'
+    + 'request: ' + content.ctx.path;
+}
+
+module.exports = function error(options) {
   options = options || {};
 
-  app.context.throw = function(){
-    throw createError.apply(null, arguments);
-  };
-  app.context.assert = function(determination, statusCode, statusMessage, options) {
-    if (determination) return;
-    throw createError(statusCode, statusMessage, options);
-  };
+  const env = process.env.NODE_ENV || 'development';
 
-  app.use(function* error(next){
-    var err = null;
+  return function *(next){
     try {
       yield next;
       if (404 == this.response.status && !this.response.body) {
-        err = createError(404);
+        this.throw(404);
       }
-    } catch (e) {
-      err = e;
+    } catch (err) {
+      this.status = err.status || 500;
+
+      this.app.emit('error', err, this);
+
+      const content = {
+        msg: (err.expose || ('development' === env)) ? err.message : http.STATUS_CODES[this.status],
+        code: err.code || '',
+        env: env,
+        engine: options.engine,
+        cache: options.cache || true,
+        ctx: this,
+        err: err,
+        template: options.template
+      };
+      var type = this.accepts([options.type || 'text/plain', 'application/json', 'text/html']);
+      var render;
+
+      switch (type.split('/').pop()) {
+        case 'json':
+          render = options.render || jsonRender;
+          break;
+        case 'html':
+          (options.template && options.engine) ? render = htmlRender : (render = textRender, type = 'text/plain'); 
+          break;
+        default:
+          options.render ? render = options.render : (render = textRender, type = 'text/plain');
+      }
+
+      this.type = type;
+      this.body = yield render(content);
     }
-
-    if (err === null) {
-      return;
-    }
-    this.app.emit('error', err, this);
-    if ('ENOENT' == err.code) err.status = 404;
-
-    if (options.render) {
-      options.render.bind(this)(err);
-      return;
-    }
-
-    var msg = statuses.empty[this.status] ? null : (err.expose ? err.message : statuses[this.status]);
-    this.res.statusCode = 'number' === typeof err.status ? err.status : 500;
-    this.res.statusMessage = msg;
-
-    if ('json' === this.accepts('text', 'json')) {
-      this.type = 'json';
-      msg = msg ? JSON.stringify({error:msg}) : msg;
-      this.res.end(msg);
-      return;
-    }
-
-    this.type = 'text';
-    this.res.end(msg);
-  });
+  }
 };
