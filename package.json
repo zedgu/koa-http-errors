@@ -28,9 +28,10 @@
     "co-render": "1"
   },
   "devDependencies": {
-    "koa": "*",
     "ejs": "*",
+    "http-errors": "^1.4.0",
     "istanbul-harmony": "*",
+    "koa": "*",
     "mocha": "*",
     "should": "*",
     "supertest": "*"
