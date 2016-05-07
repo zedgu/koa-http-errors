@@ -1,7 +1,7 @@
 koa-http-errors
 ===============
 
-Assertion for koa context.
+Error response formatter for koa.
 
 [![NPM version][npm-image]][npm-url] 
 [![build status][travis-image]][travis-url] 
