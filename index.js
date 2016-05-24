@@ -1,3 +1,5 @@
+'use strict';
+
 const coRender = require('co-render');
 const http = require('http');
 
