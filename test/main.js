@@ -4,12 +4,12 @@ const koa = require('koa');
 const agent = require('supertest');
 const error = require('http-errors');
 
-function *router(next) {
-  const path = this.path.match(/\/(\w+)/)[1];
+async function router(ctx, next) {
+  const path = ctx.path.match(/\/(\w+)/)[1];
   const status = parseInt(path);
   if (status) {
     if (404 === status || 401 === status) {
-      this.status = status;
+      ctx.status = status;
     } else {
       throw new error(status);
     }
@@ -20,11 +20,11 @@ function *router(next) {
     }
     throw e;
   }
-  yield next;
+  await next();
 }
 
 describe('No Options', function() {
-  const app = koa();
+  const app = new koa();
 
   app.use(require('..')());
   app.use(router);
@@ -110,7 +110,7 @@ describe('No Options', function() {
 describe('Set Options', function() {
   describe('4. Test for specifc type, like text/xml', function() {
     it('4.1 Should got plain text type when options.render is not given', function(done) {
-      const app = koa();
+      const app = new koa();
 
       app.use(require('..')({type:'text/xml'}));
       app.use(router);
@@ -125,11 +125,11 @@ describe('Set Options', function() {
         .expect('Code: \nError: Internal Server Error\nStatus: 500\nrequest: /err', done);
     });
     it('4.2 Should got xml type when options.render is given', function(done) {
-      const app = koa();
+      const app = new koa();
 
       app.use(require('..')({
         type: 'text/xml',
-        render: function *(content) {
+        render: function (content) {
           return '<?xml version="1.0" encoding="UTF-8"?><response><error>' + content.msg + '</error></response>';
         }
       }));
@@ -147,7 +147,7 @@ describe('Set Options', function() {
   });
   describe('5. Test for html type', function() {
     it('5.1 Should got plain text type when options.template is not given', function(done) {
-      const app = koa();
+      const app = new koa();
 
       app.use(require('..')({engine: 'ejs'}));
       app.use(router);
@@ -162,7 +162,7 @@ describe('Set Options', function() {
         .expect(/Internal Server Error/, done);
     });
     it('5.2 Should got plain text type when options.engine is not given', function(done) {
-      const app = koa();
+      const app = new koa();
 
       app.use(require('..')({template: __dirname + '/error.ejs'}));
       app.use(router);
@@ -177,7 +177,7 @@ describe('Set Options', function() {
         .expect(/Internal Server Error/, done);
     });
     it('5.2 Should got html type when options.engine and options.template are given', function(done) {
-      const app = koa();
+      const app = new koa();
 
       app.use(require('..')({
         engine: 'ejs',
@@ -198,7 +198,7 @@ describe('Set Options', function() {
 });
 describe('Test for error message expose', function() {
   describe('In test mode', function() {
-    const app = koa();
+    const app = new koa();
 
     app.use(require('..')());
     app.use(router);
@@ -223,7 +223,7 @@ describe('Test for error message expose', function() {
       process.env.NODE_ENV = null;
       delete process.env.NODE_ENV;
   
-      const app = koa();
+      const app = new koa();
   
       app.use(require('..')());
       app.use(router);

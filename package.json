@@ -25,13 +25,13 @@
   },
   "homepage": "https://github.com/zedgu/koa-http-errors",
   "dependencies": {
-    "co-render": "1"
+    "consolidate": "^0.14.5"
   },
   "devDependencies": {
     "ejs": "*",
     "http-errors": "^1.4.0",
     "istanbul-harmony": "*",
-    "koa": "*",
+    "koa": "^2.2.0",
     "mocha": "*",
     "should": "*",
     "supertest": "*"

@@ -1,9 +1,9 @@
 'use strict';
 
-const coRender = require('co-render');
+const cons = require('consolidate');
 const http = require('http');
 
-function *jsonRender(content) {
+function jsonRender(content) {
   return {
     code: content.err.code,
     error: content.msg,
@@ -12,8 +12,8 @@ function *jsonRender(content) {
   };
 }
 
-function *htmlRender(content) {
-  return yield coRender(content.template, {
+function htmlRender(content) {
+  return cons.ejs(content.template, {
     engine: content.engine,
     cache: content.cache,
     env: content.env,
@@ -27,7 +27,7 @@ function *htmlRender(content) {
   });
 }
 
-function *textRender(content) {
+function textRender(content) {
   return 'Code: ' + content.code + '\n'
     + 'Error: ' + content.msg + '\n'
     + 'Status: ' + content.ctx.status + '\n'
@@ -39,28 +39,28 @@ module.exports = function error(options) {
 
   const env = process.env.NODE_ENV || 'development';
 
-  return function *(next){
+  return async (ctx, next) => {
     try {
-      yield next;
-      if (404 == this.response.status && !this.response.body) {
-        this.throw(404);
+      await next();
+      if (404 == ctx.response.status && !ctx.response.body) {
+        ctx.throw(404);
       }
     } catch (err) {
-      this.status = err.status || 500;
+      ctx.status = err.status || 500;
 
-      this.app.emit('error', err, this);
+      ctx.app.emit('error', err, ctx);
 
       const content = {
-        msg: (err.expose || ('development' === env)) ? err.message : http.STATUS_CODES[this.status],
+        msg: (err.expose || ('development' === env)) ? err.message : http.STATUS_CODES[ctx.status],
         code: err.code || '',
         env: env,
         engine: options.engine,
         cache: options.cache || true,
-        ctx: this,
+        ctx: ctx,
         err: err,
         template: options.template
       };
-      var type = this.accepts([options.type || 'text/plain', 'application/json', 'text/html']);
+      var type = ctx.accepts([options.type || 'text/plain', 'application/json', 'text/html']);
       var render;
 
       switch (type.split('/').pop()) {
@@ -74,8 +74,8 @@ module.exports = function error(options) {
           options.render ? render = options.render : (render = textRender, type = 'text/plain');
       }
 
-      this.type = type;
-      this.body = yield render(content);
+      ctx.type = type;
+      ctx.body = await render(content);
     }
   }
 };

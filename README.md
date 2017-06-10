@@ -17,7 +17,7 @@ Usage
 ```javascript
 var errors = require('koa-http-errors');
 
-var app = koa();
+var app = new koa(); // koa-http-errors^0.4.0 for koa 2.x
 app.use(errors());
 ```
 
